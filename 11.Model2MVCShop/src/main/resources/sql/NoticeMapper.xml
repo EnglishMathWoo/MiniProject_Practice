@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="NoticeMapper">
+ 	
+ 	
+	<resultMap id="noticeSelectMap" type="notice">
+		<result property="noticeNo" 			column="notice_no" 			jdbcType="INTEGER"/>
+		<result property="noticeTitle" 			column="notice_title" 			jdbcType="VARCHAR"/>
+		<result property="noticeContent"		column="notice_content" 		jdbcType="VARCHAR" />
+		<result property="noticeFileName"		column="image_file" 		jdbcType="VARCHAR" />
+		<result property="noticeDate"		column="notice_date" 		jdbcType="DATE" />
+	</resultMap>
+	
+	
+	<!-- SQL : INSERT -->
+	<insert 	id="addNotice"		parameterType="notice">
+		INSERT
+		INTO notice(notice_no, notice_title, notice_content, image_file, notice_date) 
+		VALUES	 (seq_notice_notice_no.NEXTVAL, #{noticeTitle:VARCHAR}, #{noticeContent:VARCHAR}, 
+		#{noticeFileName:VARCHAR}, SYSDATE)
+	 </insert>
+	 
+	 
+	 <!-- findNotice Method -->
+ 	<select 	id="findNotice" 	parameterType="int"	 resultMap="noticeSelectMap">
+		SELECT * FROM notice
+		<where>
+		notice_no = #{noticeNo}
+		</where>
+  	</select>
+	
+	
+	<!-- SQL : SELECT LIST -->
+	<select  id="getNoticeList"  parameterType="search"	resultMap="noticeSelectMap">
+	  	SELECT *
+	  	FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+	  					FROM		(	SELECT notice_no, notice_title, notice_date
+											FROM notice
+											ORDER BY notice_no DESC) inner_table
+						WHERE ROWNUM &lt;= #{endRowNum} )
+		WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+	 </select>
+	 	<!--  위 두번째 subQuery 의  
+	 			WHERE ROWNUM &lt;= #{endRowNum} ) 는
+	 			WHERE ROWNUM <= #{endRowNum} ) 의미이며..
+	 			< 는 keyword 로 &lt; 를	사용.
+	 			
+	 			<![CDATA[  ~~~  ]]> 를 이용하여 아래와 같이 사용  할 수 있다.
+	 			CDATA ==> Character Data 의 의미 Java 에서 \n 같은 특수문자 처리  
+
+				WHERE ROWNUM <![CDATA[ <=]]> #{endRowNum} )
+		-->
+	
+	<!-- SQL : SELECT ROW Count -->	 
+	 <select  id="getTotalCount"  parameterType="search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(	SELECT notice_no, notice_title, notice_date
+						FROM notice) countTable						
+	 </select>
+	 
+	 <!-- updateNotice Method -->
+	<update 	id="updateNotice"  parameterType="notice">
+		UPDATE notice
+		<set>
+		notice_title = #{noticeTitle},
+		notice_content = #{noticeContent},
+		image_file = #{noticeFileName:VARCHAR}
+		</set>
+		<where>
+		notice_no = #{noticeNo}
+		</where>
+	</update>
+	
+	 <!-- 쿠폰 삭제 -->	
+	 <select  id="deleteNotice"  parameterType="int">
+	  	DELETE FROM notice
+	  	<where>
+			notice_no= #{noticeNo}
+		</where>		
+	 </select>
+ 
+</mapper>

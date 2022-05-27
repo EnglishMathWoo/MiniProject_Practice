@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CouponMapper">
+ 	
+ 	
+	<resultMap id="couponSelectMap" type="coupon">
+		<result property="couponNo" 			column="coupon_no" 			jdbcType="INTEGER"/>
+		<result property="couponStatus"		column="coupon_status" 		jdbcType="VARCHAR" />
+		<result property="couponName"		column="coupon_name" 		jdbcType="VARCHAR" />
+		<result property="discountRate" 	column="discount_rate" 		jdbcType="DOUBLE" />
+		<result property="discountValue" 	column="discount_value" 		jdbcType="INTEGER" />
+		<result property="startDate" 			column="start_date" 		jdbcType="DATE" />
+		<result property="endDate" 		column="end_date" 			jdbcType="DATE" />
+		
+	<association property="couponUser"  javaType="user">
+			<id property="userId" column="couponuser_id" jdbcType="VARCHAR"/>
+	</association>	
+		
+	</resultMap>
+	
+	
+	<!-- SQL : INSERT -->
+	<insert 	id="addCoupon"		parameterType="coupon">
+		INSERT
+		INTO coupon(coupon_no, coupon_name, discount_rate, discount_value) 
+		VALUES	 (seq_coupon_coupon_no.NEXTVAL, #{couponName:VARCHAR}, #{discountRate:DOUBLE}, #{discountValue:INTEGER})
+	 </insert>
+	 
+	  <!-- findCoupon Method -->
+ 	<select 	id="findCoupon" 	parameterType="string"	 resultMap="couponSelectMap">
+		SELECT * from coupon
+  	</select>
+	   	
+  	<!-- SQL : SELECT LIST -->
+	<select  id="getCouponList"  parameterType="search"	resultMap="couponSelectMap">
+	  	SELECT *
+	  	FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+	  					FROM		(	SELECT coupon_no, coupon_name, discount_rate, discount_value
+											FROM coupon
+											ORDER BY coupon_no DESC) inner_table
+						WHERE ROWNUM &lt;= #{endRowNum} )
+		WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum} 
+	 </select>
+	 	<!--  위 두번째 subQuery 의  
+	 			WHERE ROWNUM &lt;= #{endRowNum} ) 는
+	 			WHERE ROWNUM <= #{endRowNum} ) 의미이며..
+	 			< 는 keyword 로 &lt; 를	사용.
+	 			
+	 			<![CDATA[  ~~~  ]]> 를 이용하여 아래와 같이 사용  할 수 있다.
+	 			CDATA ==> Character Data 의 의미 Java 에서 \n 같은 특수문자 처리  
+
+				WHERE ROWNUM <![CDATA[ <=]]> #{endRowNum} )
+		-->
+	
+	<!-- SQL : SELECT ROW Count -->	 
+	 <select  id="getTotalCount"  parameterType="search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(	SELECT coupon_no, coupon_name, discount_rate, discount_value
+						FROM coupon) countTable						
+	 </select>
+	 
+	 <!-- 쿠폰 삭제 -->	
+	 <select  id="deleteCoupon"  parameterType="int">
+	  	DELETE FROM coupon
+	  	<where>
+			coupon_no= #{couponNo}
+		</where>		
+	 </select>
+ 
+</mapper>
